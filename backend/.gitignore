@@ -1,0 +1,40 @@
+# ---- Environment / Secrets ----
+.env
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# ---- Logs ----
+*.log
+
+# ---- Django Local Settings ----
+local_settings.py
+
+# ---- Database ----
+db.sqlite3
+db.sqlite3-journal
+
+# ---- Django Migrations ----
+# Ignore all migration files except __init__.py
+**/migrations/*
+!**/migrations/
+!**/migrations/__init__.py
+
+# ---- Python Cache ----
+__pycache__/
+*.pyc
+
+# ---- Media (user uploads) ----
+media/
+
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
