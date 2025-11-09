@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import {
@@ -23,8 +24,13 @@ import {
   TrendingUp,
   Activity,
   Bell,
+  Users,
+  X,
+  Truck,
+  CheckCircle2,
+  LogOut,
+  User,
 } from "lucide-react";
-
 
 // Fix for default marker icons in react-leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -67,6 +73,60 @@ const MapCenter = ({ center, zoom }) => {
   return null;
 };
 
+// Dummy data for dispatch teams
+const dispatchTeams = [
+  {
+    id: "TEAM001",
+    name: "Alpha Collection Team",
+    members: 4,
+    vehicle: "Truck-12",
+    status: "available",
+    currentLocation: "Pokhara Central",
+    rating: 4.8,
+    completedJobs: 127,
+  },
+  {
+    id: "TEAM002",
+    name: "Beta Collection Team",
+    members: 3,
+    vehicle: "Truck-15",
+    status: "available",
+    currentLocation: "Lakeside Area",
+    rating: 4.6,
+    completedJobs: 98,
+  },
+  {
+    id: "TEAM003",
+    name: "Gamma Collection Team",
+    members: 5,
+    vehicle: "Truck-08",
+    status: "available",
+    currentLocation: "Mahendrapul",
+    rating: 4.9,
+    completedJobs: 156,
+  },
+  {
+    id: "TEAM004",
+    name: "Delta Collection Team",
+    members: 4,
+    vehicle: "Truck-22",
+    status: "busy",
+    currentLocation: "Birauta",
+    rating: 4.7,
+    completedJobs: 112,
+  },
+  {
+    id: "TEAM005",
+    name: "Epsilon Collection Team",
+    members: 3,
+    vehicle: "Truck-19",
+    status: "available",
+    currentLocation: "Prithvi Chowk",
+    rating: 4.5,
+    completedJobs: 89,
+  },
+];
+
 // Dummy data for bins
 const generateDummyBins = () => [
   {
@@ -79,6 +139,7 @@ const generateDummyBins = () => [
     timestamp: "2025-11-06T10:20:00Z",
     status: "warning",
     address: "Pokhara City Center",
+    area: "City Center",
   },
   {
     bin_id: "CHT002",
@@ -90,6 +151,7 @@ const generateDummyBins = () => [
     timestamp: "2025-11-06T10:18:00Z",
     status: "critical",
     address: "Mahendrapul Area",
+    area: "Mahendrapul",
   },
   {
     bin_id: "CHT003",
@@ -101,6 +163,7 @@ const generateDummyBins = () => [
     timestamp: "2025-11-06T10:22:00Z",
     status: "good",
     address: "Lakeside Road",
+    area: "Lakeside",
   },
   {
     bin_id: "CHT004",
@@ -112,6 +175,7 @@ const generateDummyBins = () => [
     timestamp: "2025-11-06T10:19:00Z",
     status: "warning",
     address: "Prithvi Chowk",
+    area: "Prithvi Chowk",
   },
   {
     bin_id: "CHT005",
@@ -123,6 +187,43 @@ const generateDummyBins = () => [
     timestamp: "2025-11-06T10:21:00Z",
     status: "good",
     address: "Birauta",
+    area: "Birauta",
+  },
+  {
+    bin_id: "CHT006",
+    location: { lat: 27.68, lng: 84.43 },
+    metal: 40,
+    plastic: 50,
+    bio: 10,
+    fill_level: 85,
+    timestamp: "2025-11-06T10:17:00Z",
+    status: "critical",
+    address: "Pokhara City Center - North",
+    area: "City Center",
+  },
+  {
+    bin_id: "CHT007",
+    location: { lat: 27.687, lng: 84.428 },
+    metal: 35,
+    plastic: 40,
+    bio: 25,
+    fill_level: 78,
+    timestamp: "2025-11-06T10:16:00Z",
+    status: "warning",
+    address: "Mahendrapul - East",
+    area: "Mahendrapul",
+  },
+  {
+    bin_id: "CHT008",
+    location: { lat: 27.675, lng: 84.442 },
+    metal: 25,
+    plastic: 35,
+    bio: 40,
+    fill_level: 55,
+    timestamp: "2025-11-06T10:23:00Z",
+    status: "good",
+    address: "Lakeside - South",
+    area: "Lakeside",
   },
 ];
 
@@ -137,9 +238,23 @@ const generateHistoricalData = () => {
 };
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const [activeView, setActiveView] = useState("overview");
   const [bins, setBins] = useState(generateDummyBins());
   const [historicalData] = useState(generateHistoricalData());
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedArea, setSelectedArea] = useState(null);
+  const [selectedTeam, setSelectedTeam] = useState(null);
+
+  // Get username from localStorage
+  const username = localStorage.getItem("username") || "User";
+
+  // Logout handler
+  const handleLogout = () => {
+    localStorage.removeItem("isAuthenticated");
+    localStorage.removeItem("username");
+    navigate("/login", { replace: true });
+  };
 
   // Simulate real-time updates
   useEffect(() => {
@@ -194,6 +309,45 @@ const Dashboard = () => {
     if (fillLevel >= 80) return "text-red-600 bg-red-100";
     if (fillLevel >= 60) return "text-orange-600 bg-orange-100";
     return "text-green-600 bg-green-100";
+  };
+
+  // Group bins by area and calculate average fill levels
+  const getAreaAlerts = () => {
+    const areaMap = {};
+
+    bins.forEach((bin) => {
+      if (!areaMap[bin.area]) {
+        areaMap[bin.area] = {
+          area: bin.area,
+          bins: [],
+          totalFillLevel: 0,
+          binCount: 0,
+        };
+      }
+      areaMap[bin.area].bins.push(bin);
+      areaMap[bin.area].totalFillLevel += bin.fill_level;
+      areaMap[bin.area].binCount += 1;
+    });
+
+    // Calculate average fill level for each area
+    const areas = Object.values(areaMap).map((areaData) => ({
+      ...areaData,
+      avgFillLevel: areaData.totalFillLevel / areaData.binCount,
+      // Get center location (average of all bin locations in area)
+      centerLocation: {
+        lat:
+          areaData.bins.reduce((sum, b) => sum + b.location.lat, 0) /
+          areaData.binCount,
+        lng:
+          areaData.bins.reduce((sum, b) => sum + b.location.lng, 0) /
+          areaData.binCount,
+      },
+    }));
+
+    // Filter areas with average fill level >= 60% and sort by average fill level
+    return areas
+      .filter((area) => area.avgFillLevel >= 60)
+      .sort((a, b) => b.avgFillLevel - a.avgFillLevel);
   };
 
   return (
@@ -275,21 +429,38 @@ const Dashboard = () => {
           >
             <Bell className="w-5 h-5" />
             <span className="font-medium">Alerts</span>
-            {criticalBins > 0 && (
+            {getAreaAlerts().length > 0 && (
               <span className="ml-auto bg-gradient-to-r from-red-500 to-rose-600 text-white text-xs px-2.5 py-1 rounded-full font-semibold shadow-lg">
-                {criticalBins}
+                {getAreaAlerts().length}
               </span>
             )}
           </button>
         </nav>
 
-        <div className="absolute bottom-0 w-64 p-4 border-t border-slate-700/50">
-          <div className="text-xs text-slate-400">
-            <p>Last Updated:</p>
-            <p className="font-medium text-white">
-              {new Date().toLocaleTimeString()}
-            </p>
+        <div className="absolute bottom-0 w-64 p-4 border-t border-slate-700/50 space-y-3">
+          {/* User Info */}
+          <div className="pb-3">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center">
+                <User className="w-4 h-4 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-slate-400">Logged in as</p>
+                <p className="text-sm font-semibold text-white truncate">
+                  {username}
+                </p>
+              </div>
+            </div>
           </div>
+
+          {/* Logout Button */}
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:bg-red-500/20 text-slate-300 hover:text-red-400 border border-slate-700/50 hover:border-red-500/50"
+          >
+            <LogOut className="w-5 h-5" />
+            <span className="font-medium">Logout</span>
+          </button>
         </div>
       </div>
 
@@ -788,62 +959,93 @@ const Dashboard = () => {
 
           {activeView === "alerts" && (
             <div className="space-y-4">
-              {bins
-                .filter((bin) => bin.fill_level >= 60)
-                .sort((a, b) => b.fill_level - a.fill_level)
-                .map((bin) => (
-                  <div
-                    key={bin.bin_id}
-                    className={`border-l-4 rounded-2xl shadow-lg p-6 transition-all duration-300 hover:shadow-xl ${
-                      bin.fill_level >= 80
-                        ? "bg-gradient-to-r from-red-50 to-rose-50 border-red-500"
-                        : "bg-gradient-to-r from-amber-50 to-orange-50 border-amber-500"
-                    }`}
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start gap-4">
-                        <div
-                          className={`p-2 rounded-xl ${
-                            bin.fill_level >= 80 ? "bg-red-100" : "bg-amber-100"
+              {getAreaAlerts().map((areaData) => (
+                <div
+                  key={areaData.area}
+                  className={`border-l-4 rounded-2xl shadow-lg p-6 transition-all duration-300 hover:shadow-xl ${
+                    areaData.avgFillLevel >= 80
+                      ? "bg-gradient-to-r from-red-50 to-rose-50 border-red-500"
+                      : "bg-gradient-to-r from-amber-50 to-orange-50 border-amber-500"
+                  }`}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start gap-4 flex-1">
+                      <div
+                        className={`p-2 rounded-xl ${
+                          areaData.avgFillLevel >= 80
+                            ? "bg-red-100"
+                            : "bg-amber-100"
+                        }`}
+                      >
+                        <AlertCircle
+                          className={`w-6 h-6 ${
+                            areaData.avgFillLevel >= 80
+                              ? "text-red-600"
+                              : "text-amber-600"
                           }`}
-                        >
-                          <AlertCircle
-                            className={`w-6 h-6 ${
-                              bin.fill_level >= 80
-                                ? "text-red-600"
-                                : "text-amber-600"
-                            }`}
-                          />
-                        </div>
-                        <div>
-                          <h3 className="text-lg font-bold text-slate-900">
-                            {bin.fill_level >= 80 ? "CRITICAL: " : "WARNING: "}
-                            Bin {bin.bin_id} Needs Collection
-                          </h3>
-                          <p className="text-slate-700 mt-1 font-medium">
-                            Location: {bin.address} (Lat: {bin.location.lat},
-                            Lng: {bin.location.lng})
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-lg font-bold text-slate-900">
+                          {areaData.avgFillLevel >= 80
+                            ? "CRITICAL: "
+                            : "WARNING: "}
+                          {areaData.area} Area Needs Collection
+                        </h3>
+                        <p className="text-slate-700 mt-1 font-medium">
+                          Average Fill Level:{" "}
+                          <span className="font-bold text-slate-900">
+                            {areaData.avgFillLevel.toFixed(1)}%
+                          </span>
+                        </p>
+                        <p className="text-slate-700 mt-1">
+                          Bins in Area:{" "}
+                          <span className="font-bold text-slate-900">
+                            {areaData.binCount}
+                          </span>
+                          {" | "}
+                          Location: Lat:{" "}
+                          {areaData.centerLocation.lat.toFixed(3)}, Lng:{" "}
+                          {areaData.centerLocation.lng.toFixed(3)}
+                        </p>
+                        <div className="mt-3 space-y-1">
+                          <p className="text-sm font-semibold text-slate-700">
+                            Bins in this area:
                           </p>
-                          <p className="text-slate-700 mt-1">
-                            Fill Level:{" "}
-                            <span className="font-bold text-slate-900">
-                              {bin.fill_level.toFixed(0)}%
-                            </span>
-                          </p>
-                          <p className="text-sm text-slate-600 mt-2 font-medium">
-                            Last updated:{" "}
-                            {new Date(bin.timestamp).toLocaleString()}
-                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            {areaData.bins.map((bin) => (
+                              <span
+                                key={bin.bin_id}
+                                className={`px-2 py-1 rounded-lg text-xs font-semibold ${
+                                  bin.fill_level >= 80
+                                    ? "bg-red-100 text-red-700"
+                                    : bin.fill_level >= 60
+                                    ? "bg-amber-100 text-amber-700"
+                                    : "bg-slate-100 text-slate-600"
+                                }`}
+                              >
+                                {bin.bin_id}: {bin.fill_level.toFixed(0)}%
+                              </span>
+                            ))}
+                          </div>
                         </div>
                       </div>
-                      <button className="px-5 py-2.5 bg-white border-2 border-slate-300 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-400 transition-all shadow-sm hover:shadow-md">
-                        Dispatch Team
-                      </button>
                     </div>
+                    <button
+                      onClick={() => {
+                        setSelectedArea(areaData);
+                        setIsDialogOpen(true);
+                        setSelectedTeam(null);
+                      }}
+                      className="px-5 py-2.5 bg-white border-2 border-slate-300 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-400 transition-all shadow-sm hover:shadow-md ml-4"
+                    >
+                      Dispatch Team
+                    </button>
                   </div>
-                ))}
+                </div>
+              ))}
 
-              {bins.filter((bin) => bin.fill_level >= 60).length === 0 && (
+              {getAreaAlerts().length === 0 && (
                 <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-slate-200/50 p-12 text-center">
                   <div className="bg-gradient-to-br from-emerald-100 to-teal-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
                     <Activity className="w-10 h-10 text-emerald-600" />
@@ -852,7 +1054,7 @@ const Dashboard = () => {
                     All Clear!
                   </h3>
                   <p className="text-slate-600 font-medium">
-                    No bins require immediate attention at this time.
+                    No areas require immediate attention at this time.
                   </p>
                 </div>
               )}
@@ -860,6 +1062,246 @@ const Dashboard = () => {
           )}
         </div>
       </div>
+
+      {/* Dispatch Team Dialog */}
+      {isDialogOpen && selectedArea && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            {/* Dialog Header */}
+            <div className="bg-gradient-to-r from-slate-900 to-slate-800 text-white p-6 flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold">Dispatch Team</h2>
+                <p className="text-slate-300 mt-1 text-sm">
+                  Select a team for {selectedArea.area} Area
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setIsDialogOpen(false);
+                  setSelectedArea(null);
+                  setSelectedTeam(null);
+                }}
+                className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Area Info */}
+            <div className="p-6 border-b border-slate-200 bg-slate-50">
+              <div className="flex items-start gap-4">
+                <div
+                  className={`p-3 rounded-xl ${
+                    selectedArea.avgFillLevel >= 80
+                      ? "bg-gradient-to-br from-red-500 to-rose-600"
+                      : "bg-gradient-to-br from-amber-500 to-orange-600"
+                  }`}
+                >
+                  <AlertCircle className="w-6 h-6 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-slate-900 text-lg">
+                    {selectedArea.area} Area
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4 mt-2 text-sm">
+                    <div>
+                      <span className="text-slate-600">
+                        Average Fill Level:{" "}
+                      </span>
+                      <span className="font-bold text-slate-900">
+                        {selectedArea.avgFillLevel.toFixed(1)}%
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-600">Total Bins: </span>
+                      <span className="font-bold text-slate-900">
+                        {selectedArea.binCount}
+                      </span>
+                    </div>
+                    <div className="col-span-2">
+                      <span className="text-slate-600">Center Location: </span>
+                      <span className="font-semibold text-slate-700">
+                        Lat: {selectedArea.centerLocation.lat.toFixed(3)}, Lng:{" "}
+                        {selectedArea.centerLocation.lng.toFixed(3)}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="mt-3">
+                    <p className="text-sm font-semibold text-slate-700 mb-2">
+                      Bins in this area:
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedArea.bins.map((bin) => (
+                        <div
+                          key={bin.bin_id}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-semibold ${
+                            bin.fill_level >= 80
+                              ? "bg-red-100 text-red-700"
+                              : bin.fill_level >= 60
+                              ? "bg-amber-100 text-amber-700"
+                              : "bg-slate-100 text-slate-600"
+                          }`}
+                        >
+                          {bin.bin_id}: {bin.fill_level.toFixed(0)}%
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Teams List */}
+            <div className="flex-1 overflow-y-auto p-6">
+              <h3 className="text-lg font-bold text-slate-900 mb-4">
+                Available Teams
+              </h3>
+              <div className="space-y-3">
+                {dispatchTeams
+                  .filter((team) => team.status === "available")
+                  .map((team) => (
+                    <div
+                      key={team.id}
+                      onClick={() => setSelectedTeam(team.id)}
+                      className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                        selectedTeam === team.id
+                          ? "border-emerald-500 bg-emerald-50 shadow-lg"
+                          : "border-slate-200 bg-white hover:border-slate-300 hover:shadow-md"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-start gap-4 flex-1">
+                          <div
+                            className={`p-2 rounded-lg ${
+                              selectedTeam === team.id
+                                ? "bg-emerald-500"
+                                : "bg-slate-100"
+                            }`}
+                          >
+                            <Users
+                              className={`w-5 h-5 ${
+                                selectedTeam === team.id
+                                  ? "text-white"
+                                  : "text-slate-600"
+                              }`}
+                            />
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h4 className="font-bold text-slate-900">
+                                {team.name}
+                              </h4>
+                              {selectedTeam === team.id && (
+                                <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                              )}
+                            </div>
+                            <div className="grid grid-cols-2 gap-2 text-sm text-slate-600">
+                              <div className="flex items-center gap-2">
+                                <Users className="w-4 h-4 text-slate-400" />
+                                <span>{team.members} members</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Truck className="w-4 h-4 text-slate-400" />
+                                <span>{team.vehicle}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <MapPin className="w-4 h-4 text-slate-400" />
+                                <span>{team.currentLocation}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <TrendingUp className="w-4 h-4 text-slate-400" />
+                                <span>Rating: {team.rating} ⭐</span>
+                              </div>
+                            </div>
+                            <p className="text-xs text-slate-500 mt-2">
+                              {team.completedJobs} jobs completed
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+
+              {/* Busy Teams Section */}
+              {dispatchTeams.filter((team) => team.status === "busy").length >
+                0 && (
+                <div className="mt-6">
+                  <h3 className="text-lg font-bold text-slate-900 mb-4">
+                    Currently Busy Teams
+                  </h3>
+                  <div className="space-y-3">
+                    {dispatchTeams
+                      .filter((team) => team.status === "busy")
+                      .map((team) => (
+                        <div
+                          key={team.id}
+                          className="p-4 rounded-xl border-2 border-slate-200 bg-slate-50 opacity-60"
+                        >
+                          <div className="flex items-start gap-4">
+                            <div className="p-2 rounded-lg bg-slate-200">
+                              <Users className="w-5 h-5 text-slate-500" />
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <h4 className="font-bold text-slate-700">
+                                  {team.name}
+                                </h4>
+                                <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-xs font-semibold rounded-full">
+                                  Busy
+                                </span>
+                              </div>
+                              <p className="text-sm text-slate-500">
+                                Currently on another assignment
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Dialog Footer */}
+            <div className="p-6 border-t border-slate-200 bg-slate-50 flex items-center justify-end gap-3">
+              <button
+                onClick={() => {
+                  setIsDialogOpen(false);
+                  setSelectedBin(null);
+                  setSelectedTeam(null);
+                }}
+                className="px-5 py-2.5 border-2 border-slate-300 rounded-xl text-sm font-semibold text-slate-700 hover:bg-white transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (selectedTeam) {
+                    // TODO: Backend integration - dispatch team to area
+                    // For now, just close the dialog
+                    console.log(
+                      `Dispatching team ${selectedTeam} to ${selectedArea.area} area (${selectedArea.binCount} bins)`
+                    );
+                    setIsDialogOpen(false);
+                    setSelectedArea(null);
+                    setSelectedTeam(null);
+                    // You can add a toast notification here if needed
+                  }
+                }}
+                disabled={!selectedTeam}
+                className={`px-6 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                  selectedTeam
+                    ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+                    : "bg-slate-300 text-slate-500 cursor-not-allowed"
+                }`}
+              >
+                Dispatch Team
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
