@@ -25,6 +25,7 @@ import {
   Bell,
 } from "lucide-react";
 
+
 // Fix for default marker icons in react-leaflet
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
