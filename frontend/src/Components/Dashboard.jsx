@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
+import axios from "axios";
 import {
   BarChart,
   Bar,
@@ -246,6 +247,18 @@ const Dashboard = () => {
   const [selectedArea, setSelectedArea] = useState(null);
   const [selectedTeam, setSelectedTeam] = useState(null);
 
+  useEffect(() => {
+    const fetchSmartBin = async () => {
+      try {
+        const res = await axios.get("http://127.0.0.1:8000/smartbin/");
+        console.log("Data:", res);
+      } catch (error) {
+        console.error("Error fetching smart bin data:", error);
+      }
+    };
+    fetchSmartBin();
+  }, []);
+
   // Get username from localStorage
   const username = localStorage.getItem("username") || "User";
 
@@ -373,11 +386,10 @@ const Dashboard = () => {
         <nav className="p-4 space-y-2">
           <button
             onClick={() => setActiveView("overview")}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
-              activeView === "overview"
-                ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/30"
-                : "hover:bg-slate-700/50 text-slate-300"
-            }`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${activeView === "overview"
+              ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/30"
+              : "hover:bg-slate-700/50 text-slate-300"
+              }`}
           >
             <Activity className="w-5 h-5" />
             <span className="font-medium">Overview</span>
@@ -385,11 +397,10 @@ const Dashboard = () => {
 
           <button
             onClick={() => setActiveView("bins")}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
-              activeView === "bins"
-                ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/30"
-                : "hover:bg-slate-700/50 text-slate-300"
-            }`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${activeView === "bins"
+              ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/30"
+              : "hover:bg-slate-700/50 text-slate-300"
+              }`}
           >
             <Trash2 className="w-5 h-5" />
             <span className="font-medium">Bin Status</span>
@@ -397,11 +408,10 @@ const Dashboard = () => {
 
           <button
             onClick={() => setActiveView("map")}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
-              activeView === "map"
-                ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/30"
-                : "hover:bg-slate-700/50 text-slate-300"
-            }`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${activeView === "map"
+              ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/30"
+              : "hover:bg-slate-700/50 text-slate-300"
+              }`}
           >
             <MapPin className="w-5 h-5" />
             <span className="font-medium">Map View</span>
@@ -409,11 +419,10 @@ const Dashboard = () => {
 
           <button
             onClick={() => setActiveView("analytics")}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
-              activeView === "analytics"
-                ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/30"
-                : "hover:bg-slate-700/50 text-slate-300"
-            }`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${activeView === "analytics"
+              ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/30"
+              : "hover:bg-slate-700/50 text-slate-300"
+              }`}
           >
             <TrendingUp className="w-5 h-5" />
             <span className="font-medium">Analytics</span>
@@ -421,11 +430,10 @@ const Dashboard = () => {
 
           <button
             onClick={() => setActiveView("alerts")}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
-              activeView === "alerts"
-                ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/30"
-                : "hover:bg-slate-700/50 text-slate-300"
-            }`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${activeView === "alerts"
+              ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/30"
+              : "hover:bg-slate-700/50 text-slate-300"
+              }`}
           >
             <Bell className="w-5 h-5" />
             <span className="font-medium">Alerts</span>
@@ -668,8 +676,8 @@ const Dashboard = () => {
                               {bin.fill_level >= 80
                                 ? "Critical"
                                 : bin.fill_level >= 60
-                                ? "Warning"
-                                : "Good"}
+                                  ? "Warning"
+                                  : "Good"}
                             </span>
                           </td>
                           <td className="px-6 py-4 text-sm text-slate-600 font-medium">
@@ -705,8 +713,8 @@ const Dashboard = () => {
                         {bin.fill_level >= 80
                           ? "Critical"
                           : bin.fill_level >= 60
-                          ? "Warning"
-                          : "Good"}
+                            ? "Warning"
+                            : "Good"}
                       </span>
                     </div>
 
@@ -805,8 +813,8 @@ const Dashboard = () => {
                               {bin.fill_level >= 80
                                 ? "Critical"
                                 : bin.fill_level >= 60
-                                ? "Warning"
-                                : "Good"}
+                                  ? "Warning"
+                                  : "Good"}
                             </span>
                           </div>
                           <p className="text-sm text-slate-600 mb-2 flex items-center gap-1">
@@ -962,27 +970,24 @@ const Dashboard = () => {
               {getAreaAlerts().map((areaData) => (
                 <div
                   key={areaData.area}
-                  className={`border-l-4 rounded-2xl shadow-lg p-6 transition-all duration-300 hover:shadow-xl ${
-                    areaData.avgFillLevel >= 80
-                      ? "bg-gradient-to-r from-red-50 to-rose-50 border-red-500"
-                      : "bg-gradient-to-r from-amber-50 to-orange-50 border-amber-500"
-                  }`}
+                  className={`border-l-4 rounded-2xl shadow-lg p-6 transition-all duration-300 hover:shadow-xl ${areaData.avgFillLevel >= 80
+                    ? "bg-gradient-to-r from-red-50 to-rose-50 border-red-500"
+                    : "bg-gradient-to-r from-amber-50 to-orange-50 border-amber-500"
+                    }`}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-4 flex-1">
                       <div
-                        className={`p-2 rounded-xl ${
-                          areaData.avgFillLevel >= 80
-                            ? "bg-red-100"
-                            : "bg-amber-100"
-                        }`}
+                        className={`p-2 rounded-xl ${areaData.avgFillLevel >= 80
+                          ? "bg-red-100"
+                          : "bg-amber-100"
+                          }`}
                       >
                         <AlertCircle
-                          className={`w-6 h-6 ${
-                            areaData.avgFillLevel >= 80
-                              ? "text-red-600"
-                              : "text-amber-600"
-                          }`}
+                          className={`w-6 h-6 ${areaData.avgFillLevel >= 80
+                            ? "text-red-600"
+                            : "text-amber-600"
+                            }`}
                         />
                       </div>
                       <div className="flex-1">
@@ -1016,13 +1021,12 @@ const Dashboard = () => {
                             {areaData.bins.map((bin) => (
                               <span
                                 key={bin.bin_id}
-                                className={`px-2 py-1 rounded-lg text-xs font-semibold ${
-                                  bin.fill_level >= 80
-                                    ? "bg-red-100 text-red-700"
-                                    : bin.fill_level >= 60
+                                className={`px-2 py-1 rounded-lg text-xs font-semibold ${bin.fill_level >= 80
+                                  ? "bg-red-100 text-red-700"
+                                  : bin.fill_level >= 60
                                     ? "bg-amber-100 text-amber-700"
                                     : "bg-slate-100 text-slate-600"
-                                }`}
+                                  }`}
                               >
                                 {bin.bin_id}: {bin.fill_level.toFixed(0)}%
                               </span>
@@ -1091,11 +1095,10 @@ const Dashboard = () => {
             <div className="p-6 border-b border-slate-200 bg-slate-50">
               <div className="flex items-start gap-4">
                 <div
-                  className={`p-3 rounded-xl ${
-                    selectedArea.avgFillLevel >= 80
-                      ? "bg-gradient-to-br from-red-500 to-rose-600"
-                      : "bg-gradient-to-br from-amber-500 to-orange-600"
-                  }`}
+                  className={`p-3 rounded-xl ${selectedArea.avgFillLevel >= 80
+                    ? "bg-gradient-to-br from-red-500 to-rose-600"
+                    : "bg-gradient-to-br from-amber-500 to-orange-600"
+                    }`}
                 >
                   <AlertCircle className="w-6 h-6 text-white" />
                 </div>
@@ -1134,13 +1137,12 @@ const Dashboard = () => {
                       {selectedArea.bins.map((bin) => (
                         <div
                           key={bin.bin_id}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-semibold ${
-                            bin.fill_level >= 80
-                              ? "bg-red-100 text-red-700"
-                              : bin.fill_level >= 60
+                          className={`px-3 py-1.5 rounded-lg text-xs font-semibold ${bin.fill_level >= 80
+                            ? "bg-red-100 text-red-700"
+                            : bin.fill_level >= 60
                               ? "bg-amber-100 text-amber-700"
                               : "bg-slate-100 text-slate-600"
-                          }`}
+                            }`}
                         >
                           {bin.bin_id}: {bin.fill_level.toFixed(0)}%
                         </div>
@@ -1163,27 +1165,24 @@ const Dashboard = () => {
                     <div
                       key={team.id}
                       onClick={() => setSelectedTeam(team.id)}
-                      className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                        selectedTeam === team.id
-                          ? "border-emerald-500 bg-emerald-50 shadow-lg"
-                          : "border-slate-200 bg-white hover:border-slate-300 hover:shadow-md"
-                      }`}
+                      className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${selectedTeam === team.id
+                        ? "border-emerald-500 bg-emerald-50 shadow-lg"
+                        : "border-slate-200 bg-white hover:border-slate-300 hover:shadow-md"
+                        }`}
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex items-start gap-4 flex-1">
                           <div
-                            className={`p-2 rounded-lg ${
-                              selectedTeam === team.id
-                                ? "bg-emerald-500"
-                                : "bg-slate-100"
-                            }`}
+                            className={`p-2 rounded-lg ${selectedTeam === team.id
+                              ? "bg-emerald-500"
+                              : "bg-slate-100"
+                              }`}
                           >
                             <Users
-                              className={`w-5 h-5 ${
-                                selectedTeam === team.id
-                                  ? "text-white"
-                                  : "text-slate-600"
-                              }`}
+                              className={`w-5 h-5 ${selectedTeam === team.id
+                                ? "text-white"
+                                : "text-slate-600"
+                                }`}
                             />
                           </div>
                           <div className="flex-1">
@@ -1226,41 +1225,41 @@ const Dashboard = () => {
               {/* Busy Teams Section */}
               {dispatchTeams.filter((team) => team.status === "busy").length >
                 0 && (
-                <div className="mt-6">
-                  <h3 className="text-lg font-bold text-slate-900 mb-4">
-                    Currently Busy Teams
-                  </h3>
-                  <div className="space-y-3">
-                    {dispatchTeams
-                      .filter((team) => team.status === "busy")
-                      .map((team) => (
-                        <div
-                          key={team.id}
-                          className="p-4 rounded-xl border-2 border-slate-200 bg-slate-50 opacity-60"
-                        >
-                          <div className="flex items-start gap-4">
-                            <div className="p-2 rounded-lg bg-slate-200">
-                              <Users className="w-5 h-5 text-slate-500" />
-                            </div>
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-1">
-                                <h4 className="font-bold text-slate-700">
-                                  {team.name}
-                                </h4>
-                                <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-xs font-semibold rounded-full">
-                                  Busy
-                                </span>
+                  <div className="mt-6">
+                    <h3 className="text-lg font-bold text-slate-900 mb-4">
+                      Currently Busy Teams
+                    </h3>
+                    <div className="space-y-3">
+                      {dispatchTeams
+                        .filter((team) => team.status === "busy")
+                        .map((team) => (
+                          <div
+                            key={team.id}
+                            className="p-4 rounded-xl border-2 border-slate-200 bg-slate-50 opacity-60"
+                          >
+                            <div className="flex items-start gap-4">
+                              <div className="p-2 rounded-lg bg-slate-200">
+                                <Users className="w-5 h-5 text-slate-500" />
                               </div>
-                              <p className="text-sm text-slate-500">
-                                Currently on another assignment
-                              </p>
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <h4 className="font-bold text-slate-700">
+                                    {team.name}
+                                  </h4>
+                                  <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-xs font-semibold rounded-full">
+                                    Busy
+                                  </span>
+                                </div>
+                                <p className="text-sm text-slate-500">
+                                  Currently on another assignment
+                                </p>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
             </div>
 
             {/* Dialog Footer */}
@@ -1290,11 +1289,10 @@ const Dashboard = () => {
                   }
                 }}
                 disabled={!selectedTeam}
-                className={`px-6 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                  selectedTeam
-                    ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg hover:shadow-xl hover:-translate-y-0.5"
-                    : "bg-slate-300 text-slate-500 cursor-not-allowed"
-                }`}
+                className={`px-6 py-2.5 rounded-xl text-sm font-semibold transition-all ${selectedTeam
+                  ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+                  : "bg-slate-300 text-slate-500 cursor-not-allowed"
+                  }`}
               >
                 Dispatch Team
               </button>
